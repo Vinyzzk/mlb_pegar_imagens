@@ -1,6 +1,7 @@
 import requests
 import urllib.request
 import os
+import re
 
 
 def default_folders_check():
@@ -35,15 +36,24 @@ def get_images():
     if variations_quantity > 0:
         variations_control = 0
         for variation in response["variations"]:
+            variation_name = []
+            for attribute in variation["attribute_combinations"]:
+                variation_type = attribute["name"]
+                variation_value = attribute["value_name"]
+
+                variation_name.append(f"{variation_type}-{variation_value}")
+
             folder_name = variation["id"]
-            os.mkdir(f"result/{folder_name}")
+            variation_name = "-".join(variation_name)
+            variation_name = re.sub(r'[^a-zA-Z-]', '', variation_name)
+            os.mkdir(f"result/{variation_name}-{folder_name}")
             picture_ids = []
             for picture_id in variation["picture_ids"]:
                 picture_ids.append(picture_id)
 
             for picture_id in picture_ids:
                 url = f"https://http2.mlstatic.com/D_{picture_id}-F.jpg"
-                urllib.request.urlretrieve(url, f"result/{folder_name}/{picture_id}.jpg")
+                urllib.request.urlretrieve(url, f"result/{variation_name}-{folder_name}/{picture_id}.jpg")
 
             variations_control += 1
 
