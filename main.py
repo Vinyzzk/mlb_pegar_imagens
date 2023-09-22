@@ -7,6 +7,7 @@ import re
 def default_folders_check():
     print("[+] Após usar, apagar a pasta result ou os arquivos dentro dela")
     print("[+] Ainda estou automatizando essa parte, rs")
+    print()
     try:
         os.mkdir("result")
     except FileExistsError:
@@ -24,50 +25,47 @@ def get_images_by_list():
     print("rs")
 
 
+def create_folder(folder_name):
+    os.mkdir(folder_name)
+
+
+def download_images(url, folder_path):
+    picture_id = url.split("/")[-1].split("-")[0]
+    image_path = os.path.join(folder_path, f"{picture_id}.jpg")
+    urllib.request.urlretrieve(url, image_path)
+
+
 def get_images():
-    mlb = str(input("Informe um MLB: "))
+    mlb = input("Informe um MLB: ")
     url = f"https://api.mercadolibre.com/items/{mlb}"
 
     response = requests.get(url)
-    response = response.json()
+    response_data = response.json()
+    variations = response_data.get("variations", [])
+    pictures = response_data.get("pictures", [])
 
-    variations_quantity = len(response["variations"])
-
-    if variations_quantity > 0:
-        variations_control = 0
-        for variation in response["variations"]:
-            variation_name = []
-            for attribute in variation["attribute_combinations"]:
-                variation_type = attribute["name"]
-                variation_value = attribute["value_name"]
-
-                variation_name.append(f"{variation_type}-{variation_value}")
-
-            folder_name = variation["id"]
-            variation_name = "-".join(variation_name)
+    if variations:
+        for variation in variations:
+            variation_name_parts = [
+                f"{attribute['name']}-{attribute['value_name']}"
+                for attribute in variation.get("attribute_combinations", [])
+            ]
+            variation_name = "-".join(variation_name_parts)
             variation_name = re.sub(r'[^a-zA-Z-]', '', variation_name)
-            os.mkdir(f"result/{variation_name}-{folder_name}")
-            picture_ids = []
-            for picture_id in variation["picture_ids"]:
-                picture_ids.append(picture_id)
+            folder_name = f"result/{variation_name}-{variation['id']}"
+            create_folder(folder_name)
 
-            for picture_id in picture_ids:
+            for picture_id in variation.get("picture_ids", []):
                 url = f"https://http2.mlstatic.com/D_{picture_id}-F.jpg"
-                urllib.request.urlretrieve(url, f"result/{variation_name}-{folder_name}/{picture_id}.jpg")
+                download_images(url, folder_name)
 
-            variations_control += 1
+    elif pictures:
+        folder_name = f"result/{mlb}"
+        create_folder(folder_name)
 
-    if variations_quantity == 0:
-        pictures_ids = []
-        for picture_id in response["pictures"]:
-            pictures_ids.append(picture_id["id"])
-
-        folder_name = mlb
-        os.mkdir(f"result/{folder_name}")
-
-        for picture_id in pictures_ids:
-            url = f"https://http2.mlstatic.com/D_{picture_id}-F.jpg"
-            urllib.request.urlretrieve(url, f"result/{folder_name}/{picture_id}.jpg")
+        for picture in pictures:
+            url = f"https://http2.mlstatic.com/D_{picture['id']}-F.jpg"
+            download_images(url, folder_name)
 
     input("Pressione ENTER para finalizar")
 
