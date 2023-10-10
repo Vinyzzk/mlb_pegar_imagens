@@ -2,6 +2,7 @@ import requests
 import urllib.request
 import os
 import re
+import pandas as pd
 
 
 def default_folders_check():
@@ -21,10 +22,6 @@ def default_folders_check():
 #                 os.removedirs(file_path)
 
 
-def get_images_by_list():
-    print("rs")
-
-
 def create_folder(folder_name):
     os.mkdir(folder_name)
 
@@ -35,8 +32,7 @@ def download_images(url, folder_path):
     urllib.request.urlretrieve(url, image_path)
 
 
-def get_images():
-    mlb = input("Informe um MLB: ")
+def get_images(mlb):
     url = f"https://api.mercadolibre.com/items/{mlb}"
 
     response = requests.get(url)
@@ -52,7 +48,7 @@ def get_images():
             ]
             variation_name = "-".join(variation_name_parts)
             variation_name = re.sub(r'[^a-zA-Z-]', '', variation_name)
-            folder_name = f"result/{variation_name}-{variation['id']}"
+            folder_name = f"result/{mlb}-{variation_name}-{variation['id']}"
             create_folder(folder_name)
 
             for picture_id in variation.get("picture_ids", []):
@@ -70,13 +66,32 @@ def get_images():
     input("Pressione ENTER para finalizar")
 
 
+def get_images_by_list():
+    df = pd.read_excel("mlbs.xlsx")
+    column = df["MLB"]
+    mlbs = column.values
+    
+    for mlb in mlbs:
+        get_images(mlb)
+
+        input("Pressione ENTER para finalizar")
+        
+
 if __name__ == "__main__":
     default_folders_check()
 
+    print(
+        """Individual: Voce fornece um MLB unico
+Lista: Voce fornece um arquivo .xlsx com apenas uma coluna chamada MLB e os IDs embaixo
+""")
+
     option = int(input("[1] MLB Individual\n"
-              "[2] Lista de MLBs (nao funcionakkkk)\n"
-              "[3] ...?\n"
+              "[2] Lista de MLBs\n"
               "R: "))
 
     if option == 1:
-        get_images()
+        mlb = str(input("Informe um MLB: "))
+        get_images(mlb)
+
+    if option == 2:
+        get_images_by_list()
