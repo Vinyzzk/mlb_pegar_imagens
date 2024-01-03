@@ -3,23 +3,14 @@ import urllib.request
 import os
 import re
 import pandas as pd
+import os
 
 
 def default_folders_check():
-    print("[+] Após usar, apagar a pasta result ou os arquivos dentro dela")
-    print("[+] Ainda estou automatizando essa parte, rs")
-    print()
     try:
         os.mkdir("result")
     except FileExistsError:
-        print()
-
-
-#         files_qty = len(os.listdir("result"))
-#         if files_qty > 0:
-#             for file in os.listdir("result"):
-#                 file_path = os.path.join("result", file)
-#                 os.removedirs(file_path)
+        pass
 
 
 def create_folder(folder_name):
@@ -63,7 +54,11 @@ def get_images(mlb):
             url = f"https://http2.mlstatic.com/D_{picture['id']}-F.jpg"
             download_images(url, folder_name)
 
-    input("Pressione ENTER para finalizar")
+    os.system('cls')
+    print("[+] Imagens baixadas com sucesso!")
+    print(f"[+] Pasta gerada: {folder_name}")
+    print("----------")
+    print("[+] Digite 0 para parar, ou continue baixando imagens.")
 
 
 def get_images_by_list():
@@ -87,11 +82,20 @@ Lista: Voce fornece um arquivo .xlsx com apenas uma coluna chamada MLB e os IDs 
 
     option = int(input("[1] MLB Individual\n"
               "[2] Lista de MLBs\n"
-              "R: "))
+              "[>] "))
+    
+    os.system('cls')
 
     if option == 1:
-        mlb = str(input("Informe um MLB: "))
-        get_images(mlb)
+        while True:
+            mlb = str(input("[>] Informe um MLB: "))
+            if mlb == "0":
+                break
+            if mlb.startswith("MLB"):
+                get_images(mlb)
+            else:
+                print("[!] Insira um MLB valido.")
+                continue
 
     if option == 2:
         get_images_by_list()
