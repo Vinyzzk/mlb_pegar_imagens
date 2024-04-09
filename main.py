@@ -14,8 +14,10 @@ def default_folders_check():
 
 
 def create_folder(folder_name):
-    os.mkdir(folder_name)
-
+    try:
+        os.mkdir(folder_name)
+    except FileExistsError:
+        print("[+] Pasta duplicada, arquivos substituídos.")
 
 def download_images(url, folder_path):
     picture_id = url.split("/")[-1].split("-")[0]
@@ -54,11 +56,8 @@ def get_images(mlb):
             url = f"https://http2.mlstatic.com/D_{picture['id']}-F.jpg"
             download_images(url, folder_name)
 
-    os.system('cls')
-    print("[+] Imagens baixadas com sucesso!")
-    print(f"[+] Pasta gerada: {folder_name}")
-    print("----------")
-    print("[+] Digite 0 para parar, ou continue baixando imagens.")
+
+    print(f"[+] Imagens do {mlb} baixadas!")
 
 
 def get_images_by_list():
@@ -66,36 +65,50 @@ def get_images_by_list():
     column = df["MLB"]
     mlbs = column.values
     
+    print("[!] Baixando imagens...")
+    
+    if len(mlbs) == 0:
+        print("[!] A lista de MLBs precisa ter ao menos um MLB.")
+        input("Pressione ENTER para finalizar")
+        quit()
     for mlb in mlbs:
         get_images(mlb)
 
-        input("Pressione ENTER para finalizar")
+    print()
+    input("Pressione ENTER para finalizar")
         
 
 if __name__ == "__main__":
     default_folders_check()
 
     print(
-        """Individual: Voce fornece um MLB unico
-Lista: Voce fornece um arquivo .xlsx com apenas uma coluna chamada MLB e os IDs embaixo
+"""[+] Baixar imagens de anúncios do Mercado Livre
+Obs: No formato lista, é preciso somente adicionar os MLBs na planilha "mlbs.xlsx" já criada na pasta
 """)
 
-    option = int(input("[1] MLB Individual\n"
-              "[2] Lista de MLBs\n"
-              "[>] "))
+    option = int(input("""
+[1] MLB Individual
+[2] Lista de MLBs
+
+[>] """))
     
     os.system('cls')
 
     if option == 1:
         while True:
             mlb = str(input("[>] Informe um MLB: "))
+            mlb = mlb.upper()
             if mlb == "0":
                 break
             if mlb.startswith("MLB"):
                 get_images(mlb)
+                os.system('cls')
+                print("----------")
+                print("[+] Digite 0 para parar, ou continue baixando imagens.")
             else:
                 print("[!] Insira um MLB valido.")
                 continue
+                
 
     if option == 2:
         get_images_by_list()
